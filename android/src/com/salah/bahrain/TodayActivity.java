@@ -68,6 +68,9 @@ public class TodayActivity extends Activity {
             card.addView(text, Ui.lp(this, 8));
             body.addView(card, Ui.lp(this, 10));
         }
+        TextView credit = Ui.text(this, "النصوص والتسجيلات من موقع duas.org", 14, Color.parseColor("#6B6B6B"), false);
+        credit.setGravity(Gravity.CENTER);
+        body.addView(credit, Ui.lp(this, 12));
         if (items.isEmpty()) {
             body.addView(Ui.text(this, "لا توجد زيارة أو دعاء مضاف لهذا اليوم", 22, Ui.TEXT, false));
         }

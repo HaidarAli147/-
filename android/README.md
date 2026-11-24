@@ -43,3 +43,13 @@ Only add recordings you have the right to use.
 
 Computed offline for Manama (26.2285, 50.5860, UTC+3), Ja'fari method: Fajr 16°,
 Maghrib 4° below horizon, Isha 14°, Asr shadow ratio 1, midnight = midpoint sunset-Fajr.
+
+## Daily ziyara and dua (generated)
+
+`python3 tools/fetch_duas.py` pulls each weekday's ziyara and the dua of Imam Zain al-Abidin (ع)
+for that day, with their audio, from duas.org (their site states "No Copyright - Extend credit if
+using the content" - the app shows that credit). It rewrites the `@day` / `@dua` entries in
+`assets/duas.txt` and re-encodes audio into `assets/audio/` (mono 48 kbps). The day dua is
+recited by Abdulhay Al-Qamber according to the source file name.
+
+The adhan opening (`adhan_takbir`) is not included: add your own clip, otherwise the phone's Arabic voice is used.

@@ -30,7 +30,10 @@ final class Audio {
     }
 
     static String resolve(Context c, Duas.Dua d) {
-        if (d.audio != null) return find(c, d.audio.replaceAll("\\.[A-Za-z0-9]+$", ""));
+        if (d.audio != null) {
+            if (d.audio.equals("none")) return null;
+            return find(c, d.audio.replaceAll("\\.[A-Za-z0-9]+$", ""));
+        }
         if (d.day > 0) return find(c, "ziyara_" + d.day);
         if (d.dailyDua > 0) return find(c, "dua_" + d.dailyDua);
         return null;
