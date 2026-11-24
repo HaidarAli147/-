@@ -46,7 +46,7 @@ public class DuaActivity extends Activity {
             sv.addView(body);
             duaText = Ui.text(this, dua.text.toString(), 30, Ui.TEXT, false);
             duaText.setTypeface(Ui.duaFont(this));
-            duaText.setLineSpacing(0, 1.6f);
+            duaText.setLineSpacing(0, 1.15f);
             duaText.setGravity(Gravity.START);
             duaText.setBackground(Ui.rounded(Color.WHITE, 16, this));
             int p = Ui.dp(this, 18);

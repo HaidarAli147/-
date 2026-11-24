@@ -62,7 +62,7 @@ public class TodayActivity extends Activity {
             titles.add(t);
             TextView text = Ui.text(this, d.text.toString(), 28, Ui.TEXT, false);
             text.setTypeface(Ui.duaFont(this));
-            text.setLineSpacing(0, 1.6f);
+            text.setLineSpacing(0, 1.15f);
             text.setGravity(Gravity.START);
             card.addView(t);
             card.addView(text, Ui.lp(this, 8));
