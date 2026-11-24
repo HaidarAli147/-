@@ -6,6 +6,12 @@
 
     <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="34" />
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <queries>
+        <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -22,5 +28,12 @@
         </activity>
         <activity android:name=".DuaListActivity" android:screenOrientation="portrait" />
         <activity android:name=".DuaActivity" android:screenOrientation="portrait" />
+
+        <receiver android:name=".AdhanReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

@@ -1,0 +1,56 @@
+package com.salah.bahrain;
+
+import android.content.Context;
+import android.media.AudioAttributes;
+import android.media.MediaPlayer;
+import android.os.Handler;
+import android.os.Looper;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
+
+import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+/**
+ * Plays only the opening "الله أكبر، الله أكبر" of the adhan.
+ * If res/raw/adhan_takbir.(mp3|ogg) exists it is played; otherwise the phone's Arabic voice says it.
+ */
+final class AdhanSound {
+    private static final AudioAttributes ATTRS = new AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ALARM)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build();
+
+    static void play(Context c, Runnable done) {
+        final Context app = c.getApplicationContext();
+        final AtomicBoolean finished = new AtomicBoolean(false);
+        final Runnable finish = () -> { if (finished.compareAndSet(false, true)) done.run(); };
+        new Handler(Looper.getMainLooper()).postDelayed(finish, 9000); // receiver must end within ~10s
+
+        int res = app.getResources().getIdentifier("adhan_takbir", "raw", app.getPackageName());
+        if (res != 0) {
+            try {
+                MediaPlayer mp = MediaPlayer.create(app, res, ATTRS, 0);
+                mp.setOnCompletionListener(m -> { m.release(); finish.run(); });
+                mp.start();
+                return;
+            } catch (Exception ignored) { }
+        }
+        final TextToSpeech[] holder = new TextToSpeech[1];
+        holder[0] = new TextToSpeech(app, status -> {
+            TextToSpeech tts = holder[0];
+            if (status != TextToSpeech.SUCCESS || tts == null) { finish.run(); return; }
+            int r = tts.setLanguage(new Locale("ar"));
+            if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) {
+                tts.shutdown(); finish.run(); return;
+            }
+            tts.setAudioAttributes(ATTRS);
+            tts.setSpeechRate(0.55f);
+            tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                @Override public void onStart(String id) { }
+                @Override public void onDone(String id) { tts.shutdown(); finish.run(); }
+                @Override public void onError(String id) { tts.shutdown(); finish.run(); }
+            });
+            tts.speak("اَللّٰهُ أَكْبَرُ . اَللّٰهُ أَكْبَرُ", TextToSpeech.QUEUE_FLUSH, null, "adhan");
+        });
+    }
+}

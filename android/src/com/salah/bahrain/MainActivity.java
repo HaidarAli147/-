@@ -31,6 +31,7 @@ public class MainActivity extends Activity {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private TextView nextName, nextCountdown, dateView;
     private LinearLayout list;
+    private TextView adhanBtn;
     private LocalDate shownDate;
     private final Runnable tick = this::tickOnce;
 
@@ -44,7 +45,38 @@ public class MainActivity extends Activity {
         buildUi();
     }
 
-    @Override protected void onResume() { super.onResume(); handler.post(tick); }
+    @Override protected void onResume() {
+        super.onResume();
+        handler.post(tick);
+        Scheduler.scheduleNext(this);
+        if (Scheduler.enabled(this)) askNotificationPermission();
+    }
+
+    private void askNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= 33
+                && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 7);
+        }
+    }
+
+    private void renderAdhanBtn() {
+        boolean on = Scheduler.enabled(this);
+        adhanBtn.setText(on ? "تنبيه الأذان: مفعّل ✓" : "تنبيه الأذان: متوقف");
+        adhanBtn.setBackground(Ui.rounded(on ? Ui.GOLD : Color.parseColor("#9A9A9A"), 14, this));
+    }
+
+    private void openTodaysZiyara() {
+        int today = LocalDate.now(BAHRAIN).getDayOfWeek().getValue();
+        java.util.List<Duas.Dua> all = Duas.load(this);
+        for (int i = 0; i < all.size(); i++) {
+            if (all.get(i).day == today) {
+                startActivity(new Intent(this, DuaActivity.class).putExtra("index", i));
+                return;
+            }
+        }
+        startActivity(new Intent(this, DuaListActivity.class));
+    }
     @Override protected void onPause() { super.onPause(); handler.removeCallbacks(tick); }
 
     private void buildUi() {
@@ -95,10 +127,33 @@ public class MainActivity extends Activity {
         note.setGravity(Gravity.CENTER);
         body.addView(note, Ui.lp(this, 6));
 
+        adhanBtn = Ui.text(this, "", 22, Color.WHITE, true);
+        adhanBtn.setGravity(Gravity.CENTER);
+        adhanBtn.setPadding(pad, Ui.dp(this, 14), pad, Ui.dp(this, 14));
+        adhanBtn.setOnClickListener(v -> {
+            boolean on = !Scheduler.enabled(this);
+            Scheduler.setEnabled(this, on);
+            if (on) askNotificationPermission();
+            renderAdhanBtn();
+        });
+        LinearLayout.LayoutParams ap = new LinearLayout.LayoutParams(-1, -2);
+        ap.setMargins(pad, Ui.dp(this, 6), pad, 0);
+        root.addView(adhanBtn, ap);
+        renderAdhanBtn();
+
+        LinearLayout buttons = new LinearLayout(this);
+        buttons.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
         TextView duas = Ui.button(this, "الأدعية", v -> startActivity(new Intent(this, DuaListActivity.class)));
+        TextView ziyara = Ui.button(this, "زيارة اليوم", v -> openTodaysZiyara());
+        LinearLayout.LayoutParams l1 = new LinearLayout.LayoutParams(0, -2, 1f);
+        l1.setMargins(0, 0, Ui.dp(this, 6), 0);
+        LinearLayout.LayoutParams l2 = new LinearLayout.LayoutParams(0, -2, 1f);
+        l2.setMargins(Ui.dp(this, 6), 0, 0, 0);
+        buttons.addView(duas, l1);
+        buttons.addView(ziyara, l2);
         LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(-1, -2);
-        bp.setMargins(pad, Ui.dp(this, 6), pad, pad);
-        root.addView(duas, bp);
+        bp.setMargins(pad, Ui.dp(this, 8), pad, pad);
+        root.addView(buttons, bp);
 
         setContentView(root);
     }

@@ -12,6 +12,7 @@ final class Duas {
     static final class Dua {
         String title;
         boolean tasbih;
+        int day; // 1=Monday..7=Sunday (java.time), 0 = not tied to a day
         final StringBuilder text = new StringBuilder();
     }
 
@@ -27,6 +28,7 @@ final class Duas {
                     out.add(cur);
                 } else if (cur != null) {
                     if (line.trim().equals("@tasbih")) cur.tasbih = true;
+                    else if (line.startsWith("@day ")) cur.day = Integer.parseInt(line.substring(5).trim());
                     else cur.text.append(line).append('\n');
                 }
             }
