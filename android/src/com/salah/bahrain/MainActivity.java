@@ -31,6 +31,7 @@ public class MainActivity extends Activity {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private TextView nextName, nextCountdown, dateView;
     private LinearLayout list;
+    private boolean crashShown;
     private TextView adhanBtn;
     private LocalDate shownDate;
     private final Runnable tick = this::tickOnce;
@@ -42,14 +43,29 @@ public class MainActivity extends Activity {
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        if (CrashView.pending(this)) { crashShown = true; CrashView.show(this); return; }
         buildUi();
     }
 
     @Override protected void onResume() {
         super.onResume();
+        if (crashShown) return;
+        handler.removeCallbacks(tick);
         handler.post(tick);
-        Scheduler.scheduleNext(this);
-        if (Scheduler.enabled(this)) askNotificationPermission();
+        try {
+            Scheduler.scheduleNext(this);
+            if (Scheduler.enabled(this)) askNotificationPermission();
+        } catch (Exception ignored) { } // never let alarms/permissions stop the app from opening
+    }
+
+    @Override protected void onPause() {
+        super.onPause();
+        handler.removeCallbacks(tick);
+    }
+
+    @Override protected void onDestroy() {
+        super.onDestroy();
+        handler.removeCallbacks(tick);
     }
 
     private void askNotificationPermission() {
