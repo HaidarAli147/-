@@ -88,7 +88,7 @@ final class Ui {
         TextView t = text(c, title, 26, Color.WHITE, true);
         t.setGravity(Gravity.CENTER);
         t.setBackgroundColor(GREEN);
-        t.setPadding(dp(c, 16), dp(c, 14), dp(c, 16), dp(c, 14));
+        t.setPadding(dp(c, 16), dp(c, 10), dp(c, 16), dp(c, 10));
         return t;
     }
 }
