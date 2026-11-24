@@ -81,22 +81,26 @@ function home() {
   const list = el('div');
   view.append(head, next, list);
 
+  const status = el('p', 'note'), testBtn = el('button', 'btn small', 'تجربة إشعار الأذان الآن');
+  testBtn.style.marginTop = '8px';
+  testBtn.onclick = async () => { testBtn.disabled = true; status.textContent = await testPush(); testBtn.disabled = false; };
   const adhanBtn = el('button', 'btn gold'); adhanBtn.onclick = async () => {
     const on = !store.get('adhan', true);
     store.set('adhan', on);
-    if (on) await ensureNotifications();
+    if (on) { status.textContent = 'جارٍ التفعيل...'; const r = await enablePush(); status.textContent = r.msg; } else { await disablePush(); status.textContent = ''; }
     renderAdhan();
   };
-  const renderAdhan = () => { const on = store.get('adhan', true); adhanBtn.textContent = on ? 'أذان الفجر والظهر والمغرب: مفعّل ✓' : 'أذان الفجر والظهر والمغرب: متوقف'; adhanBtn.classList.toggle('off', !on); };
+  if (store.get('adhan', true) && pushSupported() && Notification.permission === 'granted') enablePush().then(r => { status.textContent = r.msg; });
+  const renderAdhan = () => { const on = store.get('adhan', true); adhanBtn.textContent = on ? 'أذان الفجر والظهر والمغرب: مفعّل ✓' : 'أذان الفجر والظهر والمغرب: متوقف'; adhanBtn.classList.toggle('off', !on); testBtn.hidden = !on; };
   renderAdhan();
   const two = el('div', 'two');
   const duasBtn = el('a', 'btn', 'الأدعية'); duasBtn.href = '#/duas';
   const todayBtn = el('a', 'btn', 'ورد اليوم'); todayBtn.href = '#/today';
   two.append(duasBtn, todayBtn);
   const offline = el('button', 'btn small', 'تحميل الأصوات للاستخدام بدون إنترنت'); offline.style.marginTop = '10px'; offline.onclick = () => downloadAudio(offline);
-  view.append(adhanBtn, two, offline,
+  view.append(adhanBtn, status, testBtn, two, offline,
     el('p', 'note', 'الحساب وفق المذهب الجعفري (الفجر ١٦° ، المغرب ٤° ، العشاء ١٤°)'),
-    el('p', 'note', 'يعمل الأذان والتنبيه فقط والتطبيق مفتوح'));
+    el('p', 'note', 'يصلك إشعار الأذان حتى والتطبيق مغلق (يلزم اتصال بالإنترنت وأن تسمحي بالإشعارات)'));
 
   let shown = '';
   const tick = () => {
@@ -226,6 +230,38 @@ async function downloadAudio(btn) {
   } catch (e) { btn.textContent = 'تعذّر التحميل - حاول مرة أخرى'; btn.disabled = false; }
 }
 
+/* ---------- Web Push: adhan notification even when the app is closed ---------- */
+const VAPID_PUBLIC = 'BH13bhZ9W3uPqcvbBrlK8WLzuOG1GGta0HXloEKvcESqo_K9DSjJCBGZ-5KTeJ6KDLM50Bx0QZaxj91kvSGJCRg';
+const b64ToBytes = b => { const p = '='.repeat((4 - b.length % 4) % 4), r = atob((b + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(r, c => c.charCodeAt(0)); };
+const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
+/** Subscribes this device and registers it with the server. Returns a short status message. */
+async function enablePush() {
+  if (!pushSupported()) return { ok: false, msg: 'هذا المتصفح لا يدعم الإشعارات' };
+  if (Notification.permission === 'default') await Notification.requestPermission();
+  if (Notification.permission !== 'granted') return { ok: false, msg: 'لم يتم السماح بالإشعارات - فعّلها من إعدادات الموقع' };
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = (await reg.pushManager.getSubscription()) ||
+      await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(VAPID_PUBLIC) });
+    const r = await fetch('api/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON() }) });
+    if (!r.ok) throw new Error('server ' + r.status);
+    return { ok: true, msg: 'إشعارات الأذان مفعّلة على هذا الجهاز ✓', endpoint: sub.endpoint };
+  } catch (e) { return { ok: false, msg: 'تعذّر تفعيل الإشعارات - تأكد من الاتصال بالإنترنت وحاول مرة أخرى' }; }
+}
+async function disablePush() {
+  try {
+    const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+    if (sub) { await fetch('api/subscribe', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) }).catch(() => {}); await sub.unsubscribe(); }
+  } catch (e) {}
+}
+async function testPush() {
+  const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+  if (!sub) return 'فعّل الأذان أولاً';
+  const r = await fetch('api/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) }).catch(() => null);
+  return r && r.ok ? 'تم إرسال إشعار تجريبي - يجب أن يظهر خلال ثوانٍ' : 'تعذّر إرسال الإشعار التجريبي';
+}
+
 /* ---------- adhan alert (only works while the app is open) ---------- */
 async function ensureNotifications() {
   if (!('Notification' in window)) return false;
@@ -237,12 +273,12 @@ function takbir() {
   const u = new SpeechSynthesisUtterance('اَللّٰهُ أَكْبَرُ . اَللّٰهُ أَكْبَرُ');
   u.lang = 'ar'; u.rate = 0.6; speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
-async function fireAdhan(name, mins) {
+async function fireAdhan(name, mins, k) {
   const body = `المنامة • ${time12(mins)}`;
   takbir();
   if (await ensureNotifications()) {
     const reg = await navigator.serviceWorker?.getRegistration();
-    const opts = { body, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: 'adhan', renotify: true, lang: 'ar', dir: 'rtl' };
+    const opts = { body, icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', tag: 'adhan-' + k, renotify: true, lang: 'ar', dir: 'rtl' };
     if (reg) reg.showNotification('حان وقت أذان ' + name, opts); else new Notification('حان وقت أذان ' + name, opts);
   }
 }
@@ -252,7 +288,7 @@ function adhanWatcher() {
     const n = bahrainNow(), t = PrayerCalc.compute(n.y, n.m, n.d);
     for (const [k, name] of [['fajr', 'الفجر'], ['dhuhr', 'الظهر'], ['maghrib', 'المغرب']]) {
       const m = PrayerCalc.minutes(t[k]), key = `fired-${n.y}-${n.m}-${n.d}-${k}`;
-      if (n.min >= m && n.min < m + 2 && !store.get(key, false)) { store.set(key, true); fireAdhan(name, m); }
+      if (n.min >= m && n.min < m + 2 && !store.get(key, false)) { store.set(key, true); fireAdhan(name, m, k); }
     }
   }, 5000);
 }

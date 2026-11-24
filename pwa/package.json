@@ -1,0 +1,11 @@
+{
+  "name": "salah-pwa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Prayer times PWA with Web Push adhan notifications",
+  "engines": { "node": "22.x" },
+  "dependencies": {
+    "@vercel/blob": "0.27.3",
+    "web-push": "3.6.7"
+  }
+}

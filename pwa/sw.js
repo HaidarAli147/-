@@ -1,6 +1,6 @@
 /* Service worker: the app works offline after the first visit.
    Audio is cached when played (or via the "download audio" button) and served with Range support. */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL = `salah-shell-${VERSION}`, AUDIO = 'salah-audio-v1';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'prayer.js', 'manifest.webmanifest', 'data/duas.txt',
   'fonts/AmiriQuran.ttf', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png'];
@@ -40,6 +40,15 @@ self.addEventListener('fetch', e => {
     const net = fetch(req).then(r => { if (r.ok) caches.open(SHELL).then(c => c.put(req, r.clone())); return r; }).catch(() => hit);
     return hit || net;
   }));
+});
+
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (err) { d = { body: e.data && e.data.text() }; }
+  e.waitUntil(self.registration.showNotification(d.title || 'حان وقت الأذان', {
+    body: d.body || '', icon: 'icons/icon-192.png', badge: 'icons/icon-192.png',
+    tag: d.tag || 'adhan', renotify: true, lang: 'ar', dir: 'rtl',
+    vibrate: [300, 150, 300, 150, 600], requireInteraction: true, data: { url: './' } }));
 });
 
 self.addEventListener('notificationclick', e => {
