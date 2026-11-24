@@ -35,6 +35,10 @@ final class Scheduler {
     }
 
     static void scheduleNext(Context c) {
+        try { doSchedule(c); } catch (Exception ignored) { } // e.g. SecurityException on some phones: app must still work
+    }
+
+    private static void doSchedule(Context c) {
         if (!enabled(c)) return;
         LocalDateTime now = LocalDateTime.now(BAHRAIN);
         String[] names = {"الفجر", "الظهر", "المغرب"}; // adhan only at these three

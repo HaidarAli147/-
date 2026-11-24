@@ -45,6 +45,7 @@ public class MainActivity extends Activity {
         super.onCreate(b);
         if (CrashView.pending(this)) { crashShown = true; CrashView.show(this); return; }
         buildUi();
+        askNotificationPermissionOnce();
     }
 
     @Override protected void onResume() {
@@ -54,8 +55,7 @@ public class MainActivity extends Activity {
         handler.post(tick);
         try {
             Scheduler.scheduleNext(this);
-            if (Scheduler.enabled(this)) askNotificationPermission();
-        } catch (Exception ignored) { } // never let alarms/permissions stop the app from opening
+        } catch (Exception ignored) { } // never let alarms stop the app from opening
     }
 
     @Override protected void onPause() {
@@ -68,12 +68,29 @@ public class MainActivity extends Activity {
         handler.removeCallbacks(tick);
     }
 
+    /** Android 13+: ask for notification permission a single time (never from onResume - that loops). */
+    private void askNotificationPermissionOnce() {
+        try {
+            if (android.os.Build.VERSION.SDK_INT < 33 || !Scheduler.enabled(this)) return;
+            android.content.SharedPreferences sp = getSharedPreferences("salah", MODE_PRIVATE);
+            if (sp.getBoolean("asked_notif", false)) return;
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                sp.edit().putBoolean("asked_notif", true).apply();
+                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 7);
+            }
+        } catch (Exception ignored) { }
+    }
+
+    /** Same, but triggered by the user turning the adhan on. */
     private void askNotificationPermission() {
-        if (android.os.Build.VERSION.SDK_INT >= 33
-                && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
-                != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 7);
-        }
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= 33
+                    && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 7);
+            }
+        } catch (Exception ignored) { }
     }
 
     private void renderAdhanBtn() {
