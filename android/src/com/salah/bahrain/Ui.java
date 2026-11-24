@@ -17,6 +17,17 @@ final class Ui {
     static final int CREAM = Color.parseColor("#FBF6E9");
     static final int TEXT = Color.parseColor("#1F2A27");
 
+    private static android.graphics.Typeface duaFont;
+
+    /** Amiri Quran (OFL) - the Naskh font for Quran, duas and ziyarat text. */
+    static android.graphics.Typeface duaFont(Context c) {
+        if (duaFont == null) {
+            try { duaFont = android.graphics.Typeface.createFromAsset(c.getAssets(), "fonts/AmiriQuran.ttf"); }
+            catch (Exception e) { duaFont = android.graphics.Typeface.DEFAULT; }
+        }
+        return duaFont;
+    }
+
     static int dp(Context c, int v) {
         return Math.round(v * c.getResources().getDisplayMetrics().density);
     }

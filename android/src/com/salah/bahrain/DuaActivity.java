@@ -19,6 +19,9 @@ public class DuaActivity extends Activity {
     private TextView stepName, counter, hint;
     private float textSp = 30;
     private TextView duaText;
+    private final Audio.Player player = new Audio.Player();
+    private String audioFile;
+    private TextView audioBtn;
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
@@ -42,7 +45,8 @@ public class DuaActivity extends Activity {
             body.setPadding(pad, pad, pad, pad);
             sv.addView(body);
             duaText = Ui.text(this, dua.text.toString(), 30, Ui.TEXT, false);
-            duaText.setLineSpacing(0, 1.5f);
+            duaText.setTypeface(Ui.duaFont(this));
+            duaText.setLineSpacing(0, 1.6f);
             duaText.setGravity(Gravity.START);
             duaText.setBackground(Ui.rounded(Color.WHITE, 16, this));
             int p = Ui.dp(this, 18);
@@ -63,12 +67,32 @@ public class DuaActivity extends Activity {
             root.addView(sizes, new LinearLayout.LayoutParams(-1, -2));
         }
 
+        String file = Audio.resolve(this, dua);
+        if (file != null) {
+            audioFile = file;
+            audioBtn = Ui.button(this, "إيقاف مؤقت", v -> {
+                if (!player.isActive()) player.play(this, audioFile, this::audioDone);
+                else player.toggle();
+                audioBtn.setText(player.isPaused() ? "متابعة" : "إيقاف مؤقت");
+            });
+            LinearLayout.LayoutParams ap = new LinearLayout.LayoutParams(-1, -2);
+            ap.setMargins(pad, 6, pad, 0);
+            root.addView(audioBtn, ap);
+        }
         TextView back = Ui.button(this, "رجوع", v -> finish());
         LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(-1, -2);
         bp.setMargins(pad, Ui.dp(this, 8), pad, pad);
         root.addView(back, bp);
         setContentView(root);
+        if (audioFile != null) player.play(this, audioFile, this::audioDone); // plays automatically
     }
+
+    private void audioDone() {
+        player.release();
+        if (audioBtn != null) audioBtn.setText("إعادة التشغيل");
+    }
+
+    @Override protected void onDestroy() { super.onDestroy(); player.release(); }
 
     private void resize(int delta) {
         textSp = Math.max(20, Math.min(60, textSp + delta));

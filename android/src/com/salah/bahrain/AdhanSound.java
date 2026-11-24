@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Plays only the opening "الله أكبر، الله أكبر" of the adhan.
- * If res/raw/adhan_takbir.(mp3|ogg) exists it is played; otherwise the phone's Arabic voice says it.
+ * If assets/audio/adhan_takbir.(mp3|ogg|m4a|wav) exists it is played; otherwise the phone's Arabic voice says it.
  */
 final class AdhanSound {
     private static final AudioAttributes ATTRS = new AudioAttributes.Builder()
@@ -26,11 +26,14 @@ final class AdhanSound {
         final Runnable finish = () -> { if (finished.compareAndSet(false, true)) done.run(); };
         new Handler(Looper.getMainLooper()).postDelayed(finish, 9000); // receiver must end within ~10s
 
-        int res = app.getResources().getIdentifier("adhan_takbir", "raw", app.getPackageName());
-        if (res != 0) {
-            try {
-                MediaPlayer mp = MediaPlayer.create(app, res, ATTRS, 0);
+        String file = Audio.find(app, "adhan_takbir");
+        if (file != null) {
+            try (android.content.res.AssetFileDescriptor fd = app.getAssets().openFd("audio/" + file)) {
+                MediaPlayer mp = new MediaPlayer();
+                mp.setAudioAttributes(ATTRS);
+                mp.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
                 mp.setOnCompletionListener(m -> { m.release(); finish.run(); });
+                mp.prepare();
                 mp.start();
                 return;
             } catch (Exception ignored) { }

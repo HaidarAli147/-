@@ -66,19 +66,6 @@ public class MainActivity extends Activity {
         adhanBtn.setBackground(Ui.rounded(on ? Ui.GOLD : Color.parseColor("#9A9A9A"), 14, this));
     }
 
-    private void openTodaysZiyara() {
-        int today = LocalDate.now(BAHRAIN).getDayOfWeek().getValue();
-        java.util.List<Duas.Dua> all = Duas.load(this);
-        for (int i = 0; i < all.size(); i++) {
-            if (all.get(i).day == today) {
-                startActivity(new Intent(this, DuaActivity.class).putExtra("index", i));
-                return;
-            }
-        }
-        startActivity(new Intent(this, DuaListActivity.class));
-    }
-    @Override protected void onPause() { super.onPause(); handler.removeCallbacks(tick); }
-
     private void buildUi() {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -144,7 +131,7 @@ public class MainActivity extends Activity {
         LinearLayout buttons = new LinearLayout(this);
         buttons.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
         TextView duas = Ui.button(this, "الأدعية", v -> startActivity(new Intent(this, DuaListActivity.class)));
-        TextView ziyara = Ui.button(this, "زيارة اليوم", v -> openTodaysZiyara());
+        TextView ziyara = Ui.button(this, "ورد اليوم", v -> startActivity(new Intent(this, TodayActivity.class)));
         LinearLayout.LayoutParams l1 = new LinearLayout.LayoutParams(0, -2, 1f);
         l1.setMargins(0, 0, Ui.dp(this, 6), 0);
         LinearLayout.LayoutParams l2 = new LinearLayout.LayoutParams(0, -2, 1f);

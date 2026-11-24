@@ -12,7 +12,9 @@ final class Duas {
     static final class Dua {
         String title;
         boolean tasbih;
-        int day; // 1=Monday..7=Sunday (java.time), 0 = not tied to a day
+        int day;      // ziyara of this weekday: 1=Monday..7=Sunday (java.time), 0 = none
+        int dailyDua; // dua of this weekday, same numbering, 0 = none
+        String audio; // optional explicit file name in assets/audio/
         final StringBuilder text = new StringBuilder();
     }
 
@@ -29,6 +31,8 @@ final class Duas {
                 } else if (cur != null) {
                     if (line.trim().equals("@tasbih")) cur.tasbih = true;
                     else if (line.startsWith("@day ")) cur.day = Integer.parseInt(line.substring(5).trim());
+                    else if (line.startsWith("@dua ")) cur.dailyDua = Integer.parseInt(line.substring(5).trim());
+                    else if (line.startsWith("@audio ")) cur.audio = line.substring(7).trim();
                     else cur.text.append(line).append('\n');
                 }
             }

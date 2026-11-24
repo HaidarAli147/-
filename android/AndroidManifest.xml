@@ -28,6 +28,7 @@
         </activity>
         <activity android:name=".DuaListActivity" android:screenOrientation="portrait" />
         <activity android:name=".DuaActivity" android:screenOrientation="portrait" />
+        <activity android:name=".TodayActivity" android:screenOrientation="portrait" />
 
         <receiver android:name=".AdhanReceiver" android:exported="true">
             <intent-filter>
