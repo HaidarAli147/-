@@ -37,12 +37,12 @@ final class Scheduler {
     static void scheduleNext(Context c) {
         if (!enabled(c)) return;
         LocalDateTime now = LocalDateTime.now(BAHRAIN);
-        String[] names = {"الفجر", "الظهر", "العصر", "المغرب", "العشاء"};
+        String[] names = {"الفجر", "الظهر", "المغرب"}; // adhan only at these three
         for (int d = 0; d < 2; d++) {
             LocalDate date = now.toLocalDate().plusDays(d);
             PrayerCalc.Times t = PrayerCalc.compute(date);
-            double[] hours = {t.fajr, t.dhuhr, t.asr, t.maghrib, t.isha};
-            for (int i = 0; i < 5; i++) {
+            double[] hours = {t.fajr, t.dhuhr, t.maghrib};
+            for (int i = 0; i < names.length; i++) {
                 LocalDateTime at = PrayerCalc.at(date, hours[i]);
                 if (at.isAfter(now)) {
                     long ms = at.atZone(BAHRAIN).toInstant().toEpochMilli();

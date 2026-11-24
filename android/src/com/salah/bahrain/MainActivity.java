@@ -62,7 +62,7 @@ public class MainActivity extends Activity {
 
     private void renderAdhanBtn() {
         boolean on = Scheduler.enabled(this);
-        adhanBtn.setText(on ? "تنبيه الأذان: مفعّل ✓" : "تنبيه الأذان: متوقف");
+        adhanBtn.setText(on ? "أذان الفجر والظهر والمغرب: مفعّل ✓" : "أذان الفجر والظهر والمغرب: متوقف");
         adhanBtn.setBackground(Ui.rounded(on ? Ui.GOLD : Color.parseColor("#9A9A9A"), 14, this));
     }
 
