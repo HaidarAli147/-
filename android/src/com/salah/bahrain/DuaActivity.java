@@ -52,8 +52,8 @@ public class DuaActivity extends Activity {
 
             LinearLayout sizes = new LinearLayout(this);
             sizes.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-            TextView bigger = Ui.button(this, "تكبير الخط  +", v -> resize(4));
-            TextView smaller = Ui.button(this, "تصغير الخط  −", v -> resize(-4));
+            TextView bigger = Ui.button(this, "تكبير +", v -> resize(4));
+            TextView smaller = Ui.button(this, "تصغير −", v -> resize(-4));
             LinearLayout.LayoutParams a = new LinearLayout.LayoutParams(0, -2, 1f);
             a.setMargins(pad, 6, 6, 0);
             LinearLayout.LayoutParams c = new LinearLayout.LayoutParams(0, -2, 1f);

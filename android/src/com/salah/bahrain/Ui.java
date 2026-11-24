@@ -74,10 +74,10 @@ final class Ui {
 
     /** Green title bar. */
     static TextView header(Context c, String title) {
-        TextView t = text(c, title, 28, Color.WHITE, true);
+        TextView t = text(c, title, 26, Color.WHITE, true);
         t.setGravity(Gravity.CENTER);
         t.setBackgroundColor(GREEN);
-        t.setPadding(dp(c, 16), dp(c, 22), dp(c, 16), dp(c, 22));
+        t.setPadding(dp(c, 16), dp(c, 14), dp(c, 16), dp(c, 14));
         return t;
     }
 }
