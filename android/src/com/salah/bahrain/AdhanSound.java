@@ -37,8 +37,16 @@ final class AdhanSound {
         final Context app = c.getApplicationContext();
         final AtomicBoolean finished = new AtomicBoolean(false);
         final Runnable finish = () -> { if (finished.compareAndSet(false, true)) done.run(); };
-        new Handler(Looper.getMainLooper()).postDelayed(finish, 9000); // receiver must end within ~10s
+        new Handler(Looper.getMainLooper()).postDelayed(finish, 9000); // receiver must end within ~10s (the clip keeps playing)
 
+        try {   // the bundled recording
+            MediaPlayer mp = MediaPlayer.create(app, R.raw.adhan_takbir, ATTRS, 0);
+            if (mp != null) {
+                mp.setOnCompletionListener(m -> { m.release(); finish.run(); });
+                mp.start();
+                return;
+            }
+        } catch (Exception ignored) { }
         String file = Audio.find(app, "adhan_takbir");
         if (file != null) {
             try (android.content.res.AssetFileDescriptor fd = app.getAssets().openFd("audio/" + file)) {

@@ -100,7 +100,7 @@ function home() {
   const offline = el('button', 'btn small', 'تحميل الأصوات للاستخدام بدون إنترنت'); offline.style.marginTop = '10px'; offline.onclick = () => downloadAudio(offline);
   view.append(adhanBtn, status, testBtn, two, offline,
     el('p', 'note', 'الحساب وفق المذهب الجعفري (الفجر ١٦° ، المغرب ٤° ، العشاء ١٤°)'),
-    el('p', 'note', 'يصلك إشعار الأذان حتى والتطبيق مغلق (يلزم اتصال بالإنترنت وأن تسمحي بالإشعارات)'));
+    el('p', 'note', 'يصلك إشعار الأذان حتى والتطبيق مغلق (يلزم اتصال بالإنترنت وأن تسمحي بالإشعارات). اضغطي على الإشعار لسماع الأذان.'));
 
   let shown = '';
   const tick = () => {
@@ -191,6 +191,15 @@ function today() {
   }
 }
 
+function adhanScreen() {
+  player.stop(); setView('الأذان');
+  const card = el('div', 'next', '<div class="lbl">حان وقت الأذان</div><div class="name">الله أكبر</div>');
+  const again = el('button', 'btn', 'إعادة الأذان'); again.onclick = takbir;
+  const home = el('a', 'btn', 'مواقيت الصلاة'); home.href = '#/';
+  view.append(card, again, home);
+  takbir();   // started by the tap on the notification
+}
+
 function tasbih() {
   const steps = [['اللَّهُ أَكْبَرُ', 34], ['الْحَمْدُ لِلَّهِ', 33], ['سُبْحَانَ اللَّهِ', 33]];
   let step = 0, count = 0;
@@ -211,6 +220,7 @@ function route() {
   if (h === '#/') home();
   else if (h === '#/duas') duaList();
   else if (h === '#/today') today();
+  else if (h === '#/adhan') adhanScreen();
   else if (h.startsWith('#/dua/')) duaView(parseInt(h.slice(6), 10));
   else home();
 }
@@ -272,7 +282,18 @@ async function ensureNotifications() {
   if (Notification.permission === 'default') await Notification.requestPermission();
   return Notification.permission === 'granted';
 }
+let takbirAudio = null;
+/** Plays the opening "الله أكبر، الله أكبر" recording; falls back to the phone's Arabic voice. */
 function takbir() {
+  try {
+    player.stop();
+    takbirAudio = takbirAudio || new Audio('audio/adhan_takbir.mp3');
+    takbirAudio.currentTime = 0;
+    const p = takbirAudio.play();
+    if (p && p.catch) p.catch(speakTakbir);
+  } catch (e) { speakTakbir(); }
+}
+function speakTakbir() {
   if (!('speechSynthesis' in window)) return;
   const u = new SpeechSynthesisUtterance('اَللّٰهُ أَكْبَرُ . اَللّٰهُ أَكْبَرُ');
   u.lang = 'ar'; u.rate = 0.6; speechSynthesis.cancel(); speechSynthesis.speak(u);
@@ -302,5 +323,8 @@ function adhanWatcher() {
   try { await loadDuas(); } catch (e) { view.textContent = 'تعذّر تحميل الأدعية - تأكد من الاتصال بالإنترنت'; }
   window.addEventListener('hashchange', route);
   route(); adhanWatcher();
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'adhan') takbir(); });
+  }
 })();
