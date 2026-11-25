@@ -287,7 +287,7 @@ let takbirAudio = null;
 function takbir() {
   try {
     player.stop();
-    takbirAudio = takbirAudio || new Audio('audio/adhan_takbir.mp3');
+    takbirAudio = takbirAudio || new Audio('audio/adhan_takbir_v3.mp3');
     takbirAudio.currentTime = 0;
     const p = takbirAudio.play();
     if (p && p.catch) p.catch(speakTakbir);

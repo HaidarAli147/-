@@ -1,6 +1,6 @@
 /* Service worker: the app works offline after the first visit.
    Audio is cached when played (or via the "download audio" button) and served with Range support. */
-const VERSION = 'v5';
+const VERSION = 'v6';
 const SHELL = `salah-shell-${VERSION}`, AUDIO = 'salah-audio-v1';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'prayer.js', 'manifest.webmanifest', 'data/duas.txt',
   'fonts/AmiriQuran.ttf', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png'];
@@ -8,7 +8,7 @@ const FILES = ['./', 'index.html', 'style.css', 'app.js', 'prayer.js', 'manifest
 self.addEventListener('install', e => {
   e.waitUntil(Promise.all([
     caches.open(SHELL).then(c => c.addAll(FILES)),
-    caches.open(AUDIO).then(c => c.add('audio/adhan_takbir.mp3'))      // the adhan must work offline
+    caches.open(AUDIO).then(c => c.add('audio/adhan_takbir_v3.mp3'))      // the adhan must work offline
   ]).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {

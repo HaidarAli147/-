@@ -16,8 +16,10 @@ Everything is in Arabic, right-to-left, with large readable text.
 
 ## Adhan recording
 The adhan alert plays a recording supplied by the app's owner (reciter: Abu Muhannad al-Darraji, according to the
-file name), cut from 0:14 to 1:08 with a short fade-out (`android/res/raw/adhan_takbir.mp3`,
-`pwa/audio/adhan_takbir.mp3`). Replace those two files to change it. Only use recordings you have the right to use.
+file name): the opening dua followed by the first "الله أكبر" phrase, about 65 seconds. The dua is cut from the supplied
+recording at 0:14.1 and the clip ends at 1:19.7; the dua is about 11 dB quieter than the "الله أكبر" part.
+Files: `android/res/raw/adhan_takbir.mp3` and `pwa/audio/adhan_takbir_v3.mp3` (the website file name carries a
+version so phones that already cached an older clip fetch the new one). Only use recordings you have the right to use.
 
 ## Content
 Texts and recordings of the daily ziyarat/duas come from [duas.org](https://www.duas.org)

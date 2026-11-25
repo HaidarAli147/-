@@ -13,7 +13,7 @@ import android.widget.RemoteViews;
 import java.time.LocalDate;
 
 public class AdhanReceiver extends BroadcastReceiver {
-    static final String CHANNEL = "adhan2";
+    static final String CHANNEL = "adhan3";
 
     @Override public void onReceive(Context c, Intent intent) {
         String action = intent.getAction();
@@ -41,7 +41,7 @@ public class AdhanReceiver extends BroadcastReceiver {
         ch.enableVibration(true);
         nm.createNotificationChannel(ch);
         // the old silent channel from earlier versions is no longer used
-        try { nm.deleteNotificationChannel("adhan"); } catch (Exception ignored) { }
+        try { nm.deleteNotificationChannel("adhan"); nm.deleteNotificationChannel("adhan2"); } catch (Exception ignored) { }
 
         PrayerCalc.Times t = PrayerCalc.compute(LocalDate.now(Scheduler.BAHRAIN));
         double hours = name.equals("الفجر") ? t.fajr : name.equals("المغرب") ? t.maghrib : t.dhuhr;
