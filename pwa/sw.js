@@ -1,6 +1,6 @@
 /* Service worker: the app works offline after the first visit.
    Audio is cached when played (or via the "download audio" button) and served with Range support. */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL = `salah-shell-${VERSION}`, AUDIO = 'salah-audio-v1';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'prayer.js', 'manifest.webmanifest', 'data/duas.txt',
   'fonts/AmiriQuran.ttf', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png'];
