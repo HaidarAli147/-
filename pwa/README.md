@@ -24,13 +24,15 @@ Chrome on Android delivers it even when the app is closed; the user only has to 
 | `api/test.js` | "test notification" button - pushes to the caller's own device |
 | `sw.js` | shows the notification when a push arrives |
 
-Environment variables (Vercel project): `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
-(an https URL, e.g. the site URL), `CRON_SECRET`, and `BLOB_READ_WRITE_TOKEN` (created by a Vercel Blob store).
-The public key is also in `app.js` (`VAPID_PUBLIC`). Generate a pair with
-`node -e "console.log(require('web-push').generateVAPIDKeys())"` - changing keys means everyone must re-enable the adhan.
+Keys: the push (VAPID) key pair is derived on the server from `BLOB_READ_WRITE_TOKEN` (created by the Vercel Blob
+store), so no extra secret has to be set. The browser fetches the public key from `/api/vapid`. To use your own pair,
+set `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` (both). Optional: `VAPID_SUBJECT` (an https URL), `CRON_SECRET`
+(if set, `/api/cron` needs `?key=...`).
+Changing the blob token changes the derived key; phones then re-subscribe automatically when the app is opened.
 
-Scheduler: something must call `https://<site>/api/cron?key=<CRON_SECRET>` **every minute**
-(for example a free cron-job.org job). Vercel's own cron only runs every minute on a paid plan.
+Scheduler: something must call `https://<site>/api/cron` **every minute** (for example a free cron-job.org job,
+method GET). The endpoint is safe to leave public: each prayer is sent at most once per day.
+Vercel's own cron only runs every minute on a paid plan.
 
 Limits: needs internet on the phone; the notification uses the phone's normal notification sound
 (a web notification cannot play the takbir recording by itself - it plays when the app is opened).

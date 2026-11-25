@@ -1,5 +1,6 @@
 /* Called every minute by a scheduler. Sends the adhan push at Fajr, Dhuhr and Maghrib (Bahrain, Ja'fari times).
-   Protected by CRON_SECRET (?key=... or "Authorization: Bearer ..."). */
+   Each prayer is sent at most once per day, so the endpoint is safe to leave public. If CRON_SECRET is set it is
+   required (?key=... or "Authorization: Bearer ...") and the `at` test parameter is allowed. */
 const P = require('../prayer.js');
 const { listSubs, removeSub, wasSent, markSent } = require('./_store');
 const { send } = require('./_push');
@@ -12,10 +13,10 @@ module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   const secret = process.env.CRON_SECRET;
   const given = (req.query && req.query.key) || (req.headers.authorization || '').replace(/^Bearer /, '');
-  if (!secret || given !== secret) return res.status(401).json({ error: 'unauthorized' });
+  if (secret && given !== secret) return res.status(401).json({ error: 'unauthorized' });
 
   // Bahrain is UTC+3 all year. `at` (unix ms) lets us test a specific moment.
-  const at = req.query && req.query.at ? Number(req.query.at) : Date.now();
+  const at = secret && req.query && req.query.at ? Number(req.query.at) : Date.now();
   const d = new Date(at + 3 * 3600e3);
   const y = d.getUTCFullYear(), m = d.getUTCMonth() + 1, day = d.getUTCDate();
   const nowMin = d.getUTCHours() * 60 + d.getUTCMinutes();

@@ -231,7 +231,6 @@ async function downloadAudio(btn) {
 }
 
 /* ---------- Web Push: adhan notification even when the app is closed ---------- */
-const VAPID_PUBLIC = 'BH13bhZ9W3uPqcvbBrlK8WLzuOG1GGta0HXloEKvcESqo_K9DSjJCBGZ-5KTeJ6KDLM50Bx0QZaxj91kvSGJCRg';
 const b64ToBytes = b => { const p = '='.repeat((4 - b.length % 4) % 4), r = atob((b + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(r, c => c.charCodeAt(0)); };
 const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 
@@ -242,8 +241,13 @@ async function enablePush() {
   if (Notification.permission !== 'granted') return { ok: false, msg: 'لم يتم السماح بالإشعارات - فعّلها من إعدادات الموقع' };
   try {
     const reg = await navigator.serviceWorker.ready;
-    const sub = (await reg.pushManager.getSubscription()) ||
-      await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(VAPID_PUBLIC) });
+    const { publicKey } = await (await fetch('api/vapid')).json();
+    const key = b64ToBytes(publicKey);
+    let sub = await reg.pushManager.getSubscription();
+    const same = sub && sub.options && sub.options.applicationServerKey &&
+      new Uint8Array(sub.options.applicationServerKey).join() === key.join();
+    if (sub && !same) { await sub.unsubscribe(); sub = null; }          // key changed: subscribe again
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
     const r = await fetch('api/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON() }) });
     if (!r.ok) throw new Error('server ' + r.status);
     return { ok: true, msg: 'إشعارات الأذان مفعّلة على هذا الجهاز ✓', endpoint: sub.endpoint };
