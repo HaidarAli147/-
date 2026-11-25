@@ -15,10 +15,9 @@ Everything is in Arabic, right-to-left, with large readable text.
 - Dua menu: Dua al-Sabah, Ziyarat Ashura, Warith and al-Abbas, short Quran suras and duas, morning/evening adhkar.
 
 ## Adhan recording
-The adhan alert plays the opening phrase (the first "الله أكبر الله أكبر") of
-["Beautiful adhan.ogg"](https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg) on Wikimedia Commons
-(Adam-synagda, CC0 / public domain), trimmed to its first sung phrase (`android/res/raw/adhan_takbir.mp3`,
-`pwa/audio/adhan_takbir.mp3`). Listen to it once to confirm it is what you want; replace the file to change it.
+The adhan alert plays a recording supplied by the app's owner (reciter: Abu Muhannad al-Darraji, according to the
+file name), cut from 0:14 to 1:08 with a short fade-out (`android/res/raw/adhan_takbir.mp3`,
+`pwa/audio/adhan_takbir.mp3`). Replace those two files to change it. Only use recordings you have the right to use.
 
 ## Content
 Texts and recordings of the daily ziyarat/duas come from [duas.org](https://www.duas.org)
