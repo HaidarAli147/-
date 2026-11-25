@@ -20,6 +20,9 @@ public class AdhanReceiver extends BroadcastReceiver {
         if (Scheduler.ACTION_ADHAN.equals(action)) {
             String name = intent.getStringExtra("name");
             Scheduler.scheduleNext(c);               // always line up the next prayer first
+            long at = intent.getLongExtra("at", 0);
+            long off = System.currentTimeMillis() - at;
+            if (at > 0 && (off > 10 * 60_000L || off < -2 * 60_000L)) return;   // stale alarm (clock was changed): not the prayer time
             if (name != null && isDuplicate(c, name)) return;   // never call the same adhan twice
             boolean systemPlays = notifyPrayer(c, name == null ? "" : name);
             if (systemPlays) return;                 // the notification channel plays the adhan itself

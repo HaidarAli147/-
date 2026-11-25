@@ -24,8 +24,11 @@ final class Scheduler {
         if (on) scheduleNext(c); else cancel(c);
     }
 
-    private static PendingIntent pending(Context c, String name) {
-        Intent i = new Intent(c, AdhanReceiver.class).setAction(ACTION_ADHAN).putExtra("name", name);
+    private static PendingIntent pending(Context c, String name) { return pending(c, name, 0); }
+
+    /** {@code at} = the moment the alarm is meant to fire (so the receiver can tell a stale alarm after a clock change). */
+    private static PendingIntent pending(Context c, String name, long at) {
+        Intent i = new Intent(c, AdhanReceiver.class).setAction(ACTION_ADHAN).putExtra("name", name).putExtra("at", at);
         return PendingIntent.getBroadcast(c, 1, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
@@ -47,6 +50,6 @@ final class Scheduler {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         // same PendingIntent every time: this replaces any earlier alarm, so the time always follows the latest calculation
         ((AlarmManager) c.getSystemService(Context.ALARM_SERVICE))
-                .setAlarmClock(new AlarmManager.AlarmClockInfo(ms, showPi), pending(c, n.name));
+                .setAlarmClock(new AlarmManager.AlarmClockInfo(ms, showPi), pending(c, n.name, ms));
     }
 }
