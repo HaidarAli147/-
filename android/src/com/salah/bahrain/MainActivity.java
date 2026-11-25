@@ -33,6 +33,7 @@ public class MainActivity extends Activity {
     private LinearLayout list;
     private boolean crashShown;
     private TextView adhanBtn;
+    private Boolean adhanOnShown;
     private LocalDate shownDate;
     private final Runnable tick = this::tickOnce;
 
@@ -121,8 +122,17 @@ public class MainActivity extends Activity {
 
     private void renderAdhanBtn() {
         boolean on = Scheduler.enabled(this);
-        adhanBtn.setText(on ? "أذان الفجر والظهر والمغرب\nمفعّل ✓" : "أذان الفجر والظهر والمغرب\nمتوقف");
-        adhanBtn.setBackground(Ui.rounded(on ? Ui.GOLD : Color.parseColor("#9A9A9A"), 14, this));
+        String second = "متوقف";
+        if (on) {
+            AdhanPlan.Next n = AdhanPlan.next(LocalDateTime.now(BAHRAIN));
+            second = n == null ? "مفعّل ✓" : "مفعّل ✓  القادم: " + n.name + " " + Ui.time12(n.at.toLocalTime());
+        }
+        String text = "أذان الفجر والظهر والمغرب\n" + second;
+        if (!text.contentEquals(adhanBtn.getText())) adhanBtn.setText(text);
+        if (adhanOnShown == null || adhanOnShown != on) {
+            adhanOnShown = on;
+            adhanBtn.setBackground(Ui.rounded(on ? Ui.GOLD : Color.parseColor("#9A9A9A"), 14, this));
+        }
     }
 
     private void buildUi() {
@@ -226,6 +236,7 @@ public class MainActivity extends Activity {
                     + " " + MONTHS[today.getMonthValue() - 1] + " " + Ui.ar(today.getYear()));
         }
 
+        if (adhanBtn != null) renderAdhanBtn();
         PrayerCalc.Times t = PrayerCalc.compute(today);
         Row[] rows = {
                 new Row("الفجر", t.fajr, true),

@@ -20,14 +20,28 @@ public class AdhanReceiver extends BroadcastReceiver {
         if (Scheduler.ACTION_ADHAN.equals(action)) {
             String name = intent.getStringExtra("name");
             Scheduler.scheduleNext(c);               // always line up the next prayer first
+            if (name != null && isDuplicate(c, name)) return;   // never call the same adhan twice
             boolean systemPlays = notifyPrayer(c, name == null ? "" : name);
             if (systemPlays) return;                 // the notification channel plays the adhan itself
             PendingResult pr = goAsync();            // notifications blocked: play it ourselves
             AdhanSound.play(c, pr::finish);
         } else if (Intent.ACTION_BOOT_COMPLETED.equals(action)
-                || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)) {
-            Scheduler.scheduleNext(c);
+                || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)
+                || Intent.ACTION_TIME_CHANGED.equals(action)
+                || Intent.ACTION_TIMEZONE_CHANGED.equals(action)
+                || Intent.ACTION_DATE_CHANGED.equals(action)) {
+            Scheduler.scheduleNext(c);               // phone restarted / app updated / clock, date or time zone changed
         }
+    }
+
+    /** True if this prayer was already announced less than 5 minutes ago (the "test" button is not affected). */
+    private boolean isDuplicate(Context c, String name) {
+        android.content.SharedPreferences sp = c.getSharedPreferences("salah", Context.MODE_PRIVATE);
+        long now = System.currentTimeMillis();
+        boolean dup = name.equals(sp.getString("last_name", "")) && now - sp.getLong("last_time", 0) < 5 * 60_000L
+                && now >= sp.getLong("last_time", 0);
+        if (!dup) sp.edit().putString("last_name", name).putLong("last_time", now).apply();
+        return dup;
     }
 
     /** Posts the notification. Returns true if the system will play the adhan sound (channel enabled). */
