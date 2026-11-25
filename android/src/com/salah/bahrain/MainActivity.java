@@ -82,6 +82,32 @@ public class MainActivity extends Activity {
         } catch (Exception ignored) { }
     }
 
+    /** "Test" button: fires the adhan notification and sound right now, exactly like at prayer time. */
+    private void testAdhan() {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= 33
+                    && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 7);
+                android.widget.Toast.makeText(this, "اضغطي «السماح» ثم جرّبي مرة أخرى", android.widget.Toast.LENGTH_LONG).show();
+                return;
+            }
+            LocalDateTime now = LocalDateTime.now(BAHRAIN);
+            PrayerCalc.Times t = PrayerCalc.compute(now.toLocalDate());
+            String[] names = {"الفجر", "الظهر", "المغرب"};
+            double[] hours = {t.fajr, t.dhuhr, t.maghrib};
+            String name = names[0]; // after Maghrib the next one is tomorrow's Fajr
+            for (int i = 0; i < names.length; i++) {
+                if (PrayerCalc.at(now.toLocalDate(), hours[i]).isAfter(now)) { name = names[i]; break; }
+            }
+            sendBroadcast(new Intent(this, AdhanReceiver.class)
+                    .setAction(Scheduler.ACTION_ADHAN).putExtra("name", name));
+            android.widget.Toast.makeText(this, "تم إرسال إشعار الأذان", android.widget.Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            android.widget.Toast.makeText(this, "تعذّر إرسال الإشعار", android.widget.Toast.LENGTH_SHORT).show();
+        }
+    }
+
     /** Same, but triggered by the user turning the adhan on. */
     private void askNotificationPermission() {
         try {
@@ -95,7 +121,7 @@ public class MainActivity extends Activity {
 
     private void renderAdhanBtn() {
         boolean on = Scheduler.enabled(this);
-        adhanBtn.setText(on ? "أذان الفجر والظهر والمغرب: مفعّل ✓" : "أذان الفجر والظهر والمغرب: متوقف");
+        adhanBtn.setText(on ? "أذان الفجر والظهر والمغرب\nمفعّل ✓" : "أذان الفجر والظهر والمغرب\nمتوقف");
         adhanBtn.setBackground(Ui.rounded(on ? Ui.GOLD : Color.parseColor("#9A9A9A"), 14, this));
     }
 
@@ -147,18 +173,30 @@ public class MainActivity extends Activity {
         note.setGravity(Gravity.CENTER);
         body.addView(note, Ui.lp(this, 6));
 
-        adhanBtn = Ui.text(this, "", 22, Color.WHITE, true);
+        adhanBtn = Ui.text(this, "", 16, Color.WHITE, true);
         adhanBtn.setGravity(Gravity.CENTER);
-        adhanBtn.setPadding(pad, Ui.dp(this, 14), pad, Ui.dp(this, 14));
+        adhanBtn.setPadding(Ui.dp(this, 8), Ui.dp(this, 8), Ui.dp(this, 8), Ui.dp(this, 8));
         adhanBtn.setOnClickListener(v -> {
             boolean on = !Scheduler.enabled(this);
             Scheduler.setEnabled(this, on);
             if (on) askNotificationPermission();
             renderAdhanBtn();
         });
+        TextView testBtn = Ui.text(this, "تجربة\nالأذان", 16, Color.WHITE, true);
+        testBtn.setGravity(Gravity.CENTER);
+        testBtn.setBackground(Ui.rounded(Ui.GREEN, 14, this));
+        testBtn.setPadding(Ui.dp(this, 8), Ui.dp(this, 8), Ui.dp(this, 8), Ui.dp(this, 8));
+        testBtn.setOnClickListener(v -> testAdhan());
+        LinearLayout adhanRow = new LinearLayout(this);
+        adhanRow.setOrientation(LinearLayout.HORIZONTAL);
+        adhanRow.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        LinearLayout.LayoutParams toggleLp = new LinearLayout.LayoutParams(0, -1, 3f);
+        toggleLp.setMargins(0, 0, Ui.dp(this, 6), 0);
+        adhanRow.addView(adhanBtn, toggleLp);
+        adhanRow.addView(testBtn, new LinearLayout.LayoutParams(0, -1, 1f));
         LinearLayout.LayoutParams ap = new LinearLayout.LayoutParams(-1, -2);
         ap.setMargins(pad, Ui.dp(this, 6), pad, 0);
-        root.addView(adhanBtn, ap);
+        root.addView(adhanRow, ap);
         renderAdhanBtn();
 
         LinearLayout buttons = new LinearLayout(this);
